@@ -1,0 +1,1362 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATMOS-GUARD | Team Moonshot</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --bg:#0b0e12;
+  --panel:#15191f;
+  --panel-alt:#20252d;
+  --border:#30343b;
+  --text:#f1eee8;
+  --muted:#a6a29b;
+  --warn:#e99a52;
+  --danger:#e36d61;
+  --ok:#83ad8a;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:"DM Sans",sans-serif;
+  background:radial-gradient(ellipse at 50% -20%,#24211d 0%,var(--bg) 48%);
+  color:var(--text);
+  padding:22px;
+  line-height:1.5;
+}
+
+.wrap{max-width:1500px;margin:auto}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:15px;
+  padding:8px 0 22px;
+  margin-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+
+h1{
+  font-family:"Syne",sans-serif;
+  font-size:1.8rem;
+  letter-spacing:-.055em;
+  font-weight:800;
+}
+
+.brand-accent{
+  font-family:"Instrument Serif",serif;
+  font-weight:400;
+  font-style:italic;
+  color:var(--warn);
+  font-size:1.25rem;
+  letter-spacing:0;
+}
+
+h2{
+  font-family:"Syne",sans-serif;
+  font-size:1.08rem;
+  letter-spacing:-.025em;
+  margin-bottom:12px;
+}
+
+h3{
+  font-family:"Syne",sans-serif;
+  font-size:.92rem;
+  margin-bottom:10px;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:.84rem;
+  line-height:1.6;
+}
+
+header .sub{
+  max-width:560px;
+  margin-top:5px;
+}
+
+.controls{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+}
+
+select,button,input{
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:8px 11px;
+  border-radius:7px;
+  font-size:.83rem;
+  font-family:"DM Sans",sans-serif;
+}
+
+button{
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease;
+}
+
+button:hover{
+  border-color:#8b8174;
+  transform:translateY(-1px);
+}
+
+button.primary{
+  background:linear-gradient(135deg,#f0c18d,#d99050);
+  color:#20170f;
+  font-weight:700;
+  border:none;
+}
+
+.status{font-size:.82rem;color:var(--ok)}
+.status.err{color:var(--danger)}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:17px;
+  box-shadow:0 12px 32px rgba(0,0,0,.12);
+}
+
+.label{
+  color:var(--muted);
+  font-size:.68rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+
+.val{
+  font-family:"Syne",sans-serif;
+  font-size:1.5rem;
+  font-weight:650;
+  margin-top:4px;
+  color:var(--text);
+  letter-spacing:-.04em;
+}
+
+.val.warn{color:var(--warn)}
+.val.ok{color:var(--ok)}
+
+.meta-note{
+  font-size:.77rem;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin:15px 0;
+}
+
+.globe-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 285px;
+  gap:13px;
+  margin-bottom:15px;
+}
+
+.globe-card{
+  position:relative;
+  height:475px;
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 48%,#302b25 0%,#151922 48%,#090e16 100%);
+  border:1px solid var(--border);
+  border-radius:15px;
+  box-shadow:inset 0 0 80px rgba(220,150,90,.05);
+}
+
+#earthCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  cursor:grab;
+}
+
+#earthCanvas:active{cursor:grabbing}
+
+.globe-top,.globe-bottom,.globe-right{
+  position:absolute;
+  pointer-events:none;
+  z-index:2;
+}
+
+.globe-top{top:15px;left:17px}
+.globe-bottom{bottom:15px;left:17px}
+
+.globe-right{
+  top:15px;
+  right:17px;
+  text-align:right;
+}
+
+.globe-title{
+  font-family:"Syne",sans-serif;
+  font-size:.72rem;
+  letter-spacing:.08em;
+  font-weight:650;
+}
+
+.globe-small{
+  font-size:.68rem;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.globe-controls{
+  position:absolute;
+  bottom:13px;
+  right:13px;
+  display:flex;
+  gap:5px;
+  z-index:3;
+}
+
+.globe-controls button{
+  font-size:.68rem;
+  padding:6px 9px;
+  background:#121826dd;
+}
+
+.globe-controls button.active{
+  background:#343d4b;
+  border-color:#788494;
+}
+
+.globe-side{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.satellite-list{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.sat-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border:1px solid transparent;
+  border-radius:7px;
+  cursor:pointer;
+}
+
+.sat-item:hover,.sat-item.selected{
+  background:var(--panel-alt);
+  border-color:#62574a;
+}
+
+.sat-item strong{
+  font-size:.82rem;
+  display:block;
+}
+
+.sat-item small{
+  font-size:.7rem;
+  color:var(--muted);
+}
+
+.tag{
+  font-size:.65rem;
+  padding:3px 7px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  color:var(--muted);
+}
+
+.risk{
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  font-size:.82rem;
+  margin:10px 0;
+}
+
+.risk.high{color:var(--danger)}
+.risk.elevated{color:var(--warn)}
+.risk.nominal{color:var(--ok)}
+
+.kp-number{
+  font-family:"Syne",sans-serif;
+  font-size:1.9rem;
+  font-weight:650;
+}
+
+input[type=range]{
+  width:100%;
+  padding:0;
+  accent-color:var(--warn);
+  border:0;
+}
+
+.kp-help{
+  font-size:.72rem;
+  color:var(--muted);
+  max-width:185px;
+  line-height:1.4;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;
+  margin-bottom:15px;
+}
+
+.chart-box{height:265px;position:relative}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.78rem;
+  margin-top:12px;
+}
+
+th,td{
+  padding:10px 8px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+}
+
+th{color:var(--muted);font-weight:550}
+
+.audit-box{
+  padding:13px;
+  border:1px dashed #62574a;
+  border-radius:8px;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:20px;
+  font-size:.72rem;
+  font-weight:650;
+}
+
+.badge.TRUSTED{color:var(--ok);background:#83ad8a20}
+.badge.CAUTION{color:var(--warn);background:#e99a5220}
+.badge.UNTRUSTED{color:var(--danger);background:#e36d6120}
+
+.flags{margin:12px 0 0 18px;font-size:.8rem}
+.flags li{margin-bottom:5px}
+
+.section-note{
+  font-size:.78rem;
+  color:var(--muted);
+  line-height:1.55;
+  margin:5px 0 12px;
+}
+
+.footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:.72rem;
+  padding:30px 18px 20px;
+  margin-top:10px;
+  border-top:1px solid var(--border);
+}
+
+.footer-brand{
+  font-family:"Syne",sans-serif;
+  font-size:.9rem;
+  color:var(--text);
+  letter-spacing:.06em;
+}
+
+.footer-team{
+  font-family:"Instrument Serif",serif;
+  font-size:1.2rem;
+  font-style:italic;
+  color:var(--warn);
+  margin-top:5px;
+}
+
+@media(max-width:950px){
+  .globe-layout{grid-template-columns:1fr}
+  .globe-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:650px){
+  body{padding:10px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+  .globe-side{grid-template-columns:1fr}
+  .globe-card{height:390px}
+  header{align-items:flex-start}
+  .controls{width:100%}
+  header h1{font-size:1.45rem}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>ATMOS-GUARD <span class="brand-accent">/ Space Weather</span></h1>
+    <div class="sub" id="targetRole">
+      A clearer view of how solar storms can affect India's satellites.
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="status" id="connStatus">Connecting to satellite data…</span>
+    <select id="targetSelect"></select>
+
+    <label class="sub" for="kpSlider">Solar storm strength:</label>
+    <strong id="kpVal">7.0</strong>
+
+    <input id="kpSlider" type="range" min="1" max="9"
+      step="0.5" value="7">
+
+    <span class="kp-help">1 = quiet · 9 = extreme</span>
+
+    <button id="refreshBtn">Refresh data</button>
+  </div>
+</header>
+
+<section class="globe-layout">
+
+  <div class="globe-card">
+    <canvas id="earthCanvas"></canvas>
+
+    <div class="globe-top">
+      <div class="globe-title">A LOOK AT EARTH FROM SPACE</div>
+      <div class="globe-small">SATELLITES · SOLAR ACTIVITY</div>
+    </div>
+
+    <div class="globe-right">
+      <div class="globe-title">THE SUN</div>
+      <div class="globe-small">LIGHT SOURCE · ILLUSTRATION</div>
+    </div>
+
+    <div class="globe-bottom">
+      <div class="globe-title" id="globeTarget">EOS-07</div>
+      <div class="globe-small" id="globeStatus">Satellite paths around Earth</div>
+    </div>
+
+    <div class="globe-controls">
+      <button class="active" data-layer="earth">Earth</button>
+      <button data-layer="orbit">Satellite paths</button>
+      <button data-layer="atmosphere">Atmosphere</button>
+      <button id="resetGlobe">Reset view</button>
+    </div>
+  </div>
+
+  <aside class="globe-side">
+
+    <div class="card">
+      <div class="label">Indian satellites we're tracking</div>
+      <div class="satellite-list" id="satelliteList">
+        <div class="sub">Loading satellite list…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">How active is the Sun?</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div class="kp-number" id="globeKp">7.0</div>
+        <span class="tag">STORM SCALE</span>
+      </div>
+      <div class="risk elevated" id="globeRisk">Waiting for estimate…</div>
+      <div class="sub">Move the slider to explore how stronger or weaker solar activity could affect satellites.</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Satellite selected</div>
+      <div class="val" style="font-size:1.2rem" id="globeName">EOS-07</div>
+      <div class="meta-note" id="globeNorad">Satellite ID 55562</div>
+      <div class="meta-note" id="globeBand">Height above Earth: --</div>
+    </div>
+
+  </aside>
+</section>
+
+<section class="kpis">
+
+  <div class="card">
+    <div class="label">Largest daily height loss</div>
+    <div class="val warn" id="peakDecay">--</div>
+    <div class="meta-note" id="bandInfo">Satellite height range: --</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Typical position change on calm days</div>
+    <div class="val" id="calmDrift">--</div>
+    <div class="meta-note">Compared with quieter days before the storm</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Largest position change during storm</div>
+    <div class="val warn" id="stormDrift">--</div>
+    <div class="meta-note">During the strongest part of the storm</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Estimated position change in 24 hours</div>
+    <div class="val warn" id="fwdDrift24">--</div>
+    <div class="meta-note" id="fwdRiskBadge">Based on selected storm strength</div>
+  </div>
+
+</section>
+
+<section class="grid-2">
+
+  <div class="card">
+    <h2>01 / What could happen over the next 3 days?</h2>
+
+    <div class="sub" id="forecastSubtitle">
+      Estimates based on the solar storm strength selected above.
+    </div>
+
+    <p class="section-note">
+      These are estimates, not exact predictions. Height lost means how quickly a satellite may slowly sink because of air resistance.
+    </p>
+
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Time ahead</th>
+            <th>Estimated height</th>
+            <th>Height lost / day</th>
+            <th>Extra air resistance</th>
+            <th>Position change</th>
+          </tr>
+        </thead>
+        <tbody id="forecastBody">
+          <tr><td colspan="5" class="sub">Loading estimates…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>02 / Check a satellite data file</h2>
+
+    <div class="sub" style="margin-bottom:12px">
+      Upload a satellite data file (JSON or CSV). We'll look for missing readings or unusual changes, then estimate what may happen next.
+    </div>
+
+    <div class="section-note">
+      A higher data-quality score means the file looks more consistent. It does not guarantee that every reading is correct.
+    </div>
+
+    <div class="audit-box">
+      <div class="controls">
+        <input type="file" id="tleFileInput" accept=".json,.csv">
+        <button class="primary" id="auditBtn">Check this file</button>
+      </div>
+    </div>
+
+    <div id="auditOutput" style="margin-top:13px">
+      <div class="sub">No file checked yet. Choose a file to get started.</div>
+    </div>
+  </div>
+
+</section>
+
+<section class="grid-2">
+
+  <div class="card">
+    <div class="label" style="margin-bottom:8px">
+      How much height did the satellite lose?
+    </div>
+    <p class="section-note">
+      Measured height loss compared with a computer model estimate, in metres per day.
+    </p>
+    <div class="chart-box">
+      <canvas id="decayChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label" style="margin-bottom:8px">
+      How much did its position change?
+    </div>
+    <p class="section-note">
+      This shows how far the satellite's calculated position changes over a 24-hour period, in kilometres.
+    </p>
+    <div class="chart-box">
+      <canvas id="driftChart"></canvas>
+    </div>
+  </div>
+
+</section>
+
+<footer class="footer">
+  <div class="footer-brand">ATMOS-GUARD</div>
+  <div class="footer-team">Designed & Built by Team Moonshot</div>
+  <div style="margin-top:7px">
+    Space Weather Research Prototype · 2026
+  </div>
+  <div style="margin-top:5px">
+    Estimates are not used to control real satellites.
+  </div>
+</footer>
+
+</div>
+
+<script type="module">
+
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const canvas=document.getElementById('earthCanvas');
+const scene=new THREE.Scene();
+
+const camera=new THREE.PerspectiveCamera(42,1,.1,1000);
+camera.position.set(0,1.5,7.5);
+
+const renderer=new THREE.WebGLRenderer({
+  canvas,
+  antialias:true,
+  alpha:true
+});
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+const root=new THREE.Group();
+scene.add(root);
+
+scene.add(new THREE.AmbientLight(0xb2b7bc,1.5));
+
+const sunlight=new THREE.DirectionalLight(0xffe1bd,2.2);
+sunlight.position.set(-6,3,5);
+scene.add(sunlight);
+
+const loader=new THREE.TextureLoader();
+
+// Earth
+const earthMaterial=new THREE.MeshPhongMaterial({
+  color:0xb2b8b8,
+  specular:0x30343a,
+  shininess:8
+});
+
+const earth=new THREE.Mesh(
+  new THREE.SphereGeometry(2,96,96),
+  earthMaterial
+);
+
+root.add(earth);
+
+loader.load(
+  'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
+  texture=>{
+    texture.colorSpace=THREE.SRGBColorSpace;
+    earthMaterial.map=texture;
+    earthMaterial.color.set(0xffffff);
+    earthMaterial.needsUpdate=true;
+  },
+  undefined,
+  error=>console.warn('Earth texture unavailable:',error)
+);
+
+// Clouds
+const cloudMaterial=new THREE.MeshPhongMaterial({
+  transparent:true,
+  opacity:.13,
+  depthWrite:false
+});
+
+const clouds=new THREE.Mesh(
+  new THREE.SphereGeometry(2.025,80,80),
+  cloudMaterial
+);
+
+root.add(clouds);
+
+loader.load(
+  'https://threejs.org/examples/textures/planets/earth_clouds_1024.png',
+  texture=>{
+    cloudMaterial.map=texture;
+    cloudMaterial.needsUpdate=true;
+  },
+  undefined,
+  error=>console.warn('Cloud texture unavailable:',error)
+);
+
+// Atmosphere
+const atmosphereMaterial=new THREE.MeshBasicMaterial({
+  color:0x8d9a9e,
+  transparent:true,
+  opacity:.09,
+  side:THREE.BackSide
+});
+
+const atmosphere=new THREE.Mesh(
+  new THREE.SphereGeometry(2.10,64,64),
+  atmosphereMaterial
+);
+
+root.add(atmosphere);
+
+// Stars
+const starGeometry=new THREE.BufferGeometry();
+const starPositions=[];
+
+for(let i=0;i<1300;i++){
+  const p=new THREE.Vector3()
+    .randomDirection()
+    .multiplyScalar(25+Math.random()*65);
+
+  starPositions.push(p.x,p.y,p.z);
+}
+
+starGeometry.setAttribute(
+  'position',
+  new THREE.Float32BufferAttribute(starPositions,3)
+);
+
+scene.add(new THREE.Points(
+  starGeometry,
+  new THREE.PointsMaterial({
+    color:0x9da5ad,
+    size:.09,
+    transparent:true,
+    opacity:.6
+  })
+));
+
+// Sun
+const sun=new THREE.Mesh(
+  new THREE.SphereGeometry(.32,32,32),
+  new THREE.MeshBasicMaterial({color:0xd6a56f})
+);
+
+sun.position.set(-7,2.5,4);
+scene.add(sun);
+
+const sunLightPoint=new THREE.PointLight(0xffd5a0,1.5,35);
+sunLightPoint.position.copy(sun.position);
+scene.add(sunLightPoint);
+
+// Orbit paths
+const orbitGroup=new THREE.Group();
+root.add(orbitGroup);
+
+const satelliteObjects=[];
+
+const orbitColors=[
+  0xb7c0c7,
+  0xd1a879,
+  0x9caa9d,
+  0xc48c72
+];
+
+function createOrbit(radius,inclination,phase,color,index){
+
+  const points=[];
+
+  for(let i=0;i<=240;i++){
+    const angle=i/240*Math.PI*2;
+
+    const point=new THREE.Vector3(
+      Math.cos(angle)*radius,
+      Math.sin(angle)*radius*.18,
+      Math.sin(angle)*radius
+    );
+
+    point.applyAxisAngle(
+      new THREE.Vector3(1,0,0),
+      inclination
+    );
+
+    points.push(point);
+  }
+
+  const line=new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineBasicMaterial({
+      color,
+      transparent:true,
+      opacity:.4
+    })
+  );
+
+  orbitGroup.add(line);
+
+  const satellite=new THREE.Group();
+
+  const body=new THREE.Mesh(
+    new THREE.BoxGeometry(.12,.075,.09),
+    new THREE.MeshStandardMaterial({
+      color:0xb6b7b4,
+      metalness:.5,
+      roughness:.45
+    })
+  );
+
+  satellite.add(body);
+
+  const panelMaterial=new THREE.MeshStandardMaterial({
+    color:0x777f83,
+    metalness:.4,
+    roughness:.5
+  });
+
+  for(const side of [-1,1]){
+    const panel=new THREE.Mesh(
+      new THREE.BoxGeometry(.22,.018,.10),
+      panelMaterial
+    );
+
+    panel.position.x=side*.18;
+    satellite.add(panel);
+  }
+
+  orbitGroup.add(satellite);
+
+  satelliteObjects.push({
+    satellite,
+    radius,
+    inclination,
+    phase
+  });
+}
+
+createOrbit(2.55,.7,0,orbitColors[0],0);
+createOrbit(2.72,1.25,1.5,orbitColors[1],1);
+createOrbit(2.9,.25,2.5,orbitColors[2],2);
+createOrbit(3.05,1.0,4.2,orbitColors[3],3);
+
+// Camera movement
+let rotationX=-.12;
+let rotationY=.3;
+let zoom=7.5;
+let dragging=false;
+let lastX=0;
+let lastY=0;
+let paused=false;
+
+canvas.addEventListener('pointerdown',event=>{
+  dragging=true;
+  lastX=event.clientX;
+  lastY=event.clientY;
+  canvas.setPointerCapture(event.pointerId);
+});
+
+canvas.addEventListener('pointermove',event=>{
+  if(!dragging)return;
+
+  rotationY+=(event.clientX-lastX)*.006;
+  rotationX+=(event.clientY-lastY)*.006;
+
+  rotationX=Math.max(-1,Math.min(1,rotationX));
+
+  lastX=event.clientX;
+  lastY=event.clientY;
+});
+
+canvas.addEventListener('pointerup',()=>dragging=false);
+canvas.addEventListener('pointercancel',()=>dragging=false);
+
+canvas.addEventListener('wheel',event=>{
+  zoom=Math.max(5,Math.min(12,zoom+event.deltaY*.005));
+},{passive:true});
+
+// Resize
+function resize(){
+  const rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height)return;
+
+  renderer.setSize(rect.width,rect.height,false);
+  camera.aspect=rect.width/rect.height;
+  camera.updateProjectionMatrix();
+}
+
+new ResizeObserver(resize).observe(canvas);
+resize();
+
+// Animation
+const clock=new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  const time=clock.getElapsedTime();
+
+  if(!paused&&!dragging)rotationY+=.0007;
+
+  root.rotation.set(rotationX,rotationY,0);
+  clouds.rotation.y=earth.rotation.y+.006;
+
+  satelliteObjects.forEach((object,index)=>{
+    const angle=time*(.20+index*.035)+object.phase;
+
+    const position=new THREE.Vector3(
+      Math.cos(angle)*object.radius,
+      Math.sin(angle)*object.radius*.18,
+      Math.sin(angle)*object.radius
+    );
+
+    position.applyAxisAngle(
+      new THREE.Vector3(1,0,0),
+      object.inclination
+    );
+
+    object.satellite.position.copy(position);
+    object.satellite.lookAt(0,0,0);
+  });
+
+  camera.position.set(0,1.5,zoom);
+  camera.lookAt(0,0,0);
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+// View controls
+document.getElementById('resetGlobe').onclick=()=>{
+  rotationX=-.12;
+  rotationY=.3;
+  zoom=7.5;
+};
+
+document.querySelectorAll('[data-layer]').forEach(button=>{
+  button.onclick=()=>{
+    document.querySelectorAll('[data-layer]')
+      .forEach(item=>item.classList.remove('active'));
+
+    button.classList.add('active');
+
+    const layer=button.dataset.layer;
+
+    orbitGroup.visible=layer!=='earth';
+
+    atmosphereMaterial.opacity=
+      layer==='atmosphere'?.22:.09;
+  };
+});
+
+window.pauseGlobe=()=>{
+  paused=!paused;
+};
+
+</script>
+
+<script>
+
+// Backend connection
+const API_BASE='http://127.0.0.1:8001';
+
+let decayChart=null;
+let driftChart=null;
+
+const selectEl=document.getElementById('targetSelect');
+const statusEl=document.getElementById('connStatus');
+const kpSlider=document.getElementById('kpSlider');
+const kpVal=document.getElementById('kpVal');
+
+const $=id=>document.getElementById(id);
+
+kpSlider.addEventListener('input',()=>{
+  kpVal.textContent=Number(kpSlider.value).toFixed(1);
+  $('globeKp').textContent=Number(kpSlider.value).toFixed(1);
+});
+
+kpSlider.addEventListener('change',()=>{
+  loadSatellite(selectEl.value);
+});
+
+// Translate technical risk labels
+function humanRisk(level){
+  const value=String(level||'').toUpperCase();
+
+  if(value.includes('HIGH'))
+    return 'High risk — stronger storm effects possible';
+
+  if(value.includes('ELEVATED'))
+    return 'Caution — some effects may be stronger than usual';
+
+  if(value.includes('NOMINAL')||value.includes('LOW'))
+    return 'Low risk — conditions look relatively calm';
+
+  return 'Risk level not available';
+}
+
+function humanTrust(status){
+  const value=String(status||'').toUpperCase();
+
+  if(value==='TRUSTED')return 'File looks consistent';
+  if(value==='CAUTION')return 'File needs a closer look';
+  if(value==='UNTRUSTED')return 'File has serious data issues';
+
+  return 'Data check complete';
+}
+
+// Forecast table
+function renderForecastTable(forecast){
+
+  const tbody=$('forecastBody');
+
+  if(!forecast||!forecast.horizons){
+    tbody.innerHTML='<tr><td colspan="5">No estimate available</td></tr>';
+    return;
+  }
+
+  $('forecastSubtitle').textContent=
+    `Solar storm strength: ${forecast.expected_kp} / 9 — ${humanRisk(forecast.risk_level)}`;
+
+  const h24=forecast.horizons[0];
+
+  if(h24){
+    $('fwdDrift24').textContent=
+      `${h24.pred_sgp4_drift_km} km`;
+
+    $('fwdRiskBadge').textContent=
+      `${humanRisk(forecast.risk_level)} (${h24.pred_decay_m_day} m/day)`;
+  }
+
+  tbody.innerHTML=forecast.horizons.map(row=>`
+    <tr>
+      <td>+${row.horizon_h} hours</td>
+      <td>${row.projected_alt_km} km</td>
+      <td>${row.pred_decay_m_day} m/day</td>
+      <td>${row.drag_ratio_vs_quiet}x</td>
+      <td><strong>${row.pred_sgp4_drift_km} km</strong></td>
+    </tr>
+  `).join('');
+
+  const risk=forecast.risk_level||'UNKNOWN';
+
+  $('globeRisk').textContent=humanRisk(risk);
+
+  $('globeRisk').className='risk '+(
+    risk.includes('HIGH')?'high':
+    risk.includes('ELEVATED')?'elevated':'nominal'
+  );
+}
+
+// Charts
+function renderChart(existing,ctxId,labels,datasets,yLabel){
+
+  if(existing)existing.destroy();
+
+  const ctx=$(ctxId).getContext('2d');
+
+  return new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+
+      interaction:{
+        mode:'index',
+        intersect:false
+      },
+
+      plugins:{
+        legend:{
+          labels:{color:'#d5cec3'}
+        }
+      },
+
+      scales:{
+        x:{
+          ticks:{
+            color:'#a6a29b',
+            maxTicksLimit:10
+          },
+          grid:{color:'#30343b'}
+        },
+
+        y:{
+          title:{
+            display:true,
+            text:yLabel,
+            color:'#a6a29b'
+          },
+          ticks:{color:'#a6a29b'},
+          grid:{color:'#30343b'}
+        }
+      }
+    }
+  });
+}
+
+// Load satellite list
+async function loadTargets(){
+
+  try{
+    const response=await fetch(`${API_BASE}/api/targets`);
+
+    if(!response.ok){
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data=await response.json();
+
+    selectEl.innerHTML='';
+    $('satelliteList').innerHTML='';
+
+    data.targets.forEach(target=>{
+
+      const option=document.createElement('option');
+      option.value=target.norad_id;
+      option.textContent=`${target.name} (${target.norad_id})`;
+
+      if(target.norad_id==='51658'){
+        option.selected=true;
+      }
+
+      selectEl.appendChild(option);
+
+      const item=document.createElement('div');
+      item.className='sat-item';
+      item.dataset.id=target.norad_id;
+
+      item.innerHTML=`
+        <div>
+          <strong>${target.name}</strong>
+          <small>${target.role}</small>
+        </div>
+        <span class="tag">${target.norad_id}</span>
+      `;
+
+      item.addEventListener('click',()=>{
+        selectEl.value=target.norad_id;
+        loadSatellite(target.norad_id);
+      });
+
+      $('satelliteList').appendChild(item);
+    });
+
+    statusEl.textContent='Satellite data connected';
+    statusEl.className='status';
+
+    await loadSatellite(selectEl.value||'51658');
+
+  }catch(error){
+
+    statusEl.textContent=`Can't reach satellite data: ${error.message}`;
+    statusEl.className='status err';
+
+    $('satelliteList').innerHTML=
+      '<div class="sub">Could not load the satellite list. Check that the backend is running.</div>';
+  }
+}
+
+// Load selected satellite
+async function loadSatellite(noradId){
+
+  if(!noradId)return;
+
+  try{
+
+    const kp=kpSlider.value;
+
+    const response=await fetch(
+      `${API_BASE}/api/satellite/${noradId}?forecast_kp=${kp}`
+    );
+
+    const data=await response.json();
+
+    if(!response.ok){
+      throw new Error(data.detail||`HTTP ${response.status}`);
+    }
+
+    const meta=data.meta;
+
+    $('targetRole').textContent=`${meta.name} — ${meta.role}`;
+    $('bandInfo').textContent=`Satellite height range: ${meta.band_km}`;
+
+    $('globeTarget').textContent=meta.name;
+    $('globeName').textContent=meta.name;
+    $('globeNorad').textContent=`Satellite ID ${data.norad_id}`;
+    $('globeBand').textContent=`Height above Earth: ${meta.band_km}`;
+
+    $('globeStatus').textContent=`Currently viewing ${meta.name}`;
+
+    document.querySelectorAll('.sat-item').forEach(item=>{
+      item.classList.toggle('selected',item.dataset.id===noradId);
+    });
+
+    const summary=data.summary||{};
+
+    $('peakDecay').textContent=
+      summary.may11_peak_decay_m_day!=null
+      ?`${summary.may11_peak_decay_m_day} m/day`:'Not available';
+
+    $('calmDrift').textContent=
+      summary.calm_median_drift_24h_km!=null
+      ?`${summary.calm_median_drift_24h_km} km`:'Not available';
+
+    $('stormDrift').textContent=
+      summary.storm_max_drift_24h_km!=null
+      ?`${summary.storm_max_drift_24h_km} km`:'Not available';
+
+    renderForecastTable(data.forecast);
+
+    // Historical height loss
+    const dragRows=data.drag||[];
+
+    const decayLabels=dragRows.map(row=>
+      String(row.epoch_dt||'').slice(0,16).replace('T',' ')
+    );
+
+    decayChart=renderChart(
+      decayChart,
+      'decayChart',
+      decayLabels,
+      [
+        {
+          label:'Measured height loss (metres/day)',
+          data:dragRows.map(row=>row.obs_decay_24h_m),
+          borderColor:'#e99a52',
+          backgroundColor:'rgba(233,154,82,.12)',
+          borderWidth:2,
+          pointRadius:1.5
+        },
+        {
+          label:'Computer model estimate (metres/day)',
+          data:dragRows.map(row=>row.model_decay_24h_m),
+          borderColor:'#c6b9a6',
+          borderDash:[5,5],
+          borderWidth:1.8,
+          pointRadius:0
+        }
+      ],
+      'Metres per day'
+    );
+
+    // Historical position change
+    const driftRows=data.drift||[];
+
+    const driftLabels=driftRows.map(row=>
+      String(row.from_epoch||'').slice(0,16).replace('T',' ')
+    );
+
+    driftChart=renderChart(
+      driftChart,
+      'driftChart',
+      driftLabels,
+      [
+        {
+          label:'Position change over 24 hours (km)',
+          data:driftRows.map(row=>row.drift_24h_km),
+          borderColor:'#83ad8a',
+          backgroundColor:'rgba(131,173,138,.12)',
+          borderWidth:2,
+          pointRadius:2
+        }
+      ],
+      'Kilometres'
+    );
+
+  }catch(error){
+
+    statusEl.textContent=error.message;
+    statusEl.className='status err';
+
+    $('globeStatus').textContent='Satellite data unavailable';
+  }
+}
+
+// Upload and check file
+$('auditBtn').addEventListener('click',async()=>{
+
+  const fileInput=$('tleFileInput');
+  const output=$('auditOutput');
+
+  if(!fileInput.files.length){
+    output.innerHTML=
+      '<div class="status err">Choose a JSON or CSV file first.</div>';
+    return;
+  }
+
+  const formData=new FormData();
+
+  formData.append('file',fileInput.files[0]);
+  formData.append('expected_kp',kpSlider.value);
+
+  output.innerHTML=
+    '<div class="sub">Checking the file for missing readings, unusual changes and possible risks…</div>';
+
+  try{
+
+    const response=await fetch(
+      `${API_BASE}/api/evaluate`,
+      {
+        method:'POST',
+        body:formData
+      }
+    );
+
+    const data=await response.json();
+
+    if(!response.ok){
+      throw new Error(data.detail||`HTTP ${response.status}`);
+    }
+
+    const audit=data.trust_audit;
+    const stats=audit.summary_stats||{};
+
+    renderForecastTable(data.forecast);
+
+    output.innerHTML=`
+      <div style="margin-bottom:8px">
+        <span class="badge ${audit.status}">
+          ${humanTrust(audit.status)} — Data quality: ${audit.trust_score}/100
+        </span>
+      </div>
+
+      <div class="sub">
+        ${stats.object_name||''}
+        (Satellite ID ${stats.norad_id||''})
+        @ ${stats.latest_alt_km||'--'} km
+      </div>
+
+      <ul class="flags">
+        ${(audit.flags||[]).map(flag=>`<li>${flag}</li>`).join('')}
+      </ul>
+    `;
+
+  }catch(error){
+
+    output.innerHTML=
+      `<div class="status err">File check failed: ${error.message}</div>`;
+  }
+});
+
+// Select and refresh
+selectEl.addEventListener('change',()=>{
+  loadSatellite(selectEl.value);
+});
+
+$('refreshBtn').addEventListener('click',()=>{
+  loadSatellite(selectEl.value);
+});
+
+loadTargets();
+
+</script>
+
+</body>
+</html>
